@@ -138,7 +138,9 @@ class _OnBoardViewState extends State<OnBoardView> {
           txtColor: AppColor.kPrimary,
           fontWeight: AppFontWeight.w600,
         ),
-        CustomText(title: model.description, fontSize: AppFontSize.f18),
+        CustomText(
+            title: model.description,
+            fontSize: AppFontSize.f18),
       ],
     ),
   );

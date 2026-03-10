@@ -47,7 +47,14 @@ class _SplashState extends State<Splash> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(child: Image.asset(AppImages.appLogo)),
+      body: Center(child: Image.asset(AppImages.onBoardThree)),
     );
   }
 }
+
+
+
+// git log --oneline عشان تشوف تايخ كل ال commits على المشروع
+//git status بجبلك كل التعديلات الي عملتها بس لسا انت ما عملت الها commit
+//git add . (بضيف كل الاشياء الي تغيرت في المجلد الي انت فيه بس )
+//git add -A (الاشمل بضيف كلشي تغير بالمشروع كامل)
