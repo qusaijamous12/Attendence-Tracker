@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../core/config/app_color.dart';
-import '../../../../core/config/app_styles.dart';
-import '../../../../core/widget/custom_text.dart';
+import '../core/config/app_color.dart';
+import '../core/config/app_styles.dart';
+import '../core/widget/custom_text.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'home/data/lecture_model.dart';

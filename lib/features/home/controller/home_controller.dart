@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../auth/controller/login_controller.dart';
 import '../data/lecture_model.dart';
-
 
 class HomeController extends GetxController {
   final loginController = Get.find<LoginController>(tag: 'login_controller');
@@ -18,52 +18,71 @@ class HomeController extends GetxController {
 
   Future<void> createLecture({
     required String title,
+    required String courseCode,
+    required String section,
+    required String room,
     required DateTime dateTime,
-    required List<String> daysOfWeek, // أيام المحاضرة الجديدة
-  })
-  async {
+    required List<String> daysOfWeek,
+  }) async {
     createLectureStatus.value = RequestStatus.loading;
 
     try {
       final doctor = loginController.userModel.value;
       if (doctor == null) {
         createLectureStatus.value = RequestStatus.error;
-        Get.snackbar('Error', 'Doctor not logged in', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar(
+          'Error',
+          'Doctor not logged in',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
         return;
       }
 
       final docRef = _firebaseInstance.collection('lectures').doc();
       final qrHash = '${docRef.id}-${DateTime.now().millisecondsSinceEpoch}';
 
-      // attendancePerDay فارغ لكل يوم محدد
-      Map<String, List<String>> attendance = {};
-      for (var day in daysOfWeek) {
+      final attendance = <String, List<String>>{};
+      for (final day in daysOfWeek) {
         attendance[day] = [];
       }
 
       await docRef.set({
-        'title': title,
+        'title': title.trim(),
+        'courseCode': courseCode.trim(),
+        'section': section.trim(),
+        'room': room.trim(),
         'doctorId': doctor.id,
         'dateTime': dateTime,
-        'students': [],
+        'students': <String>[],
         'attendancePerDay': attendance,
         'daysOfWeek': daysOfWeek,
         'qrHash': qrHash,
       });
 
       createLectureStatus.value = RequestStatus.success;
-      Get.snackbar('Success', 'Lecture created successfully', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.blue, colorText: Colors.white);
+      Get.snackbar(
+        'Success',
+        'Lecture created successfully',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.blue,
+        colorText: Colors.white,
+      );
 
       await getDoctorLectures();
     } catch (e) {
       createLectureStatus.value = RequestStatus.error;
-      Get.snackbar('Error', 'Failed to create lecture', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
-      print(e);
+      Get.snackbar(
+        'Error',
+        'Failed to create lecture',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      debugPrint('$e');
     }
   }
-
-
-
 
   Future<void> getDoctorLectures() async {
     lecturesStatus.value = RequestStatus.loading;
@@ -88,25 +107,11 @@ class HomeController extends GetxController {
           .orderBy('dateTime', descending: true)
           .get();
 
-      final lecturesList = querySnapshot.docs.map((doc) {
-        final data = doc.data();
-
-        return LectureModel(
-          id: doc.id,
-          title: data['title'] ?? '',
-          dateTime: (data['dateTime'] as Timestamp).toDate(),
-          students: List<String>.from(data['students'] ?? []),
-          attendancePerDay: Map<String, List<String>>.from(
-            (data['attendancePerDay'] ?? {}).map(
-                  (k, v) => MapEntry(k, List<String>.from(v)),
-            ),
-          ),
-          qrHash: data['qrHash'] ?? '',
-          daysOfWeek: List<String>.from(data['daysOfWeek'] ?? []),
-        );
-      }).toList();
-
-      doctorLectures.assignAll(lecturesList);
+      doctorLectures.assignAll(
+        querySnapshot.docs
+            .map((doc) => LectureModel.fromJson(doc.data(), doc.id))
+            .toList(),
+      );
       lecturesStatus.value = RequestStatus.success;
     } catch (e) {
       lecturesStatus.value = RequestStatus.error;
@@ -117,7 +122,7 @@ class HomeController extends GetxController {
         backgroundColor: const Color(0xFFD32F2F),
         colorText: Colors.white,
       );
-      print('error is ${e.toString()}');
+      debugPrint('error is ${e.toString()}');
     }
   }
 
@@ -144,25 +149,11 @@ class HomeController extends GetxController {
           .orderBy('dateTime', descending: true)
           .get();
 
-      final lecturesList = querySnapshot.docs.map((doc) {
-        final data = doc.data();
-
-        return LectureModel(
-          id: doc.id,
-          title: data['title'] ?? '',
-          dateTime: (data['dateTime'] as Timestamp).toDate(),
-          students: List<String>.from(data['students'] ?? []),
-          attendancePerDay: Map<String, List<String>>.from(
-            (data['attendancePerDay'] ?? {}).map(
-                  (k, v) => MapEntry(k, List<String>.from(v)),
-            ),
-          ),
-          qrHash: data['qrHash'] ?? '',
-          daysOfWeek: List<String>.from(data['daysOfWeek'] ?? []),
-        );
-      }).toList();
-
-      studentLectures.assignAll(lecturesList);
+      studentLectures.assignAll(
+        querySnapshot.docs
+            .map((doc) => LectureModel.fromJson(doc.data(), doc.id))
+            .toList(),
+      );
       lecturesStatus.value = RequestStatus.success;
     } catch (e) {
       lecturesStatus.value = RequestStatus.error;
@@ -173,11 +164,39 @@ class HomeController extends GetxController {
         backgroundColor: const Color(0xFFD32F2F),
         colorText: Colors.white,
       );
-      print('error is ${e.toString()}');
+      debugPrint('error is ${e.toString()}');
     }
   }
+
+  int getTodayAttendanceCount(LectureModel lecture) {
+    final todayKey = DateTime.now().weekday.toString();
+    return lecture.attendancePerDay[todayKey]?.length ?? 0;
+  }
+
+  int getTotalAttendanceMarks(LectureModel lecture) {
+    return lecture.attendancePerDay.values.fold<int>(
+      0,
+      (total, attendees) => total + attendees.length,
+    );
+  }
+
+  double getAttendanceRate(LectureModel lecture) {
+    final scheduledDays = lecture.daysOfWeek.length;
+    final enrolledStudents = lecture.students.length;
+    if (scheduledDays == 0 || enrolledStudents == 0) {
+      return 0;
+    }
+
+    final possibleMarks = scheduledDays * enrolledStudents;
+    final actualMarks = getTotalAttendanceMarks(lecture);
+    return (actualMarks / possibleMarks).clamp(0, 1);
+  }
+
+  int getStudentAttendanceDays(LectureModel lecture, String studentId) {
+    return lecture.attendancePerDay.values
+        .where((attendees) => attendees.contains(studentId))
+        .length;
+  }
+
+  int getScheduledDaysCount(LectureModel lecture) => lecture.daysOfWeek.length;
 }
-
-
-
-

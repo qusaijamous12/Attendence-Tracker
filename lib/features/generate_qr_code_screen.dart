@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../../../../core/config/app_color.dart';
-import '../../../../core/config/app_styles.dart';
-import '../../../../core/widget/custom_text.dart';
+import '../core/config/app_color.dart';
+import '../core/config/app_styles.dart';
+import '../core/widget/custom_text.dart';
 import 'home/data/lecture_model.dart';
 
 class GenerateQRCodeScreen extends StatelessWidget {
@@ -44,6 +44,12 @@ class GenerateQRCodeScreen extends StatelessWidget {
               title: lecture.title,
               fontSize: AppFontSize.f18,
               fontWeight: AppFontWeight.bold,
+            ),
+            const SizedBox(height: 8),
+            CustomText(
+              title: '${lecture.courseCode} - Section ${lecture.section} - Room ${lecture.room}',
+              fontSize: AppFontSize.f14,
+              txtColor: Colors.black54,
             ),
             const SizedBox(height: 8),
             CustomText(

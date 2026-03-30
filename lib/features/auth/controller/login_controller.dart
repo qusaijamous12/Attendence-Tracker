@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/config/app_color.dart';
 import '../../../core/helper/shared_pref_helper.dart';
 import '../../home/controller/home_binding.dart';
 import '../../home/views/doctor_dashboard.dart';
@@ -223,6 +224,29 @@ class LoginController extends GetxController {
     }catch(error){
       print('Error When Log Out ${error.toString()}');
     }
+  }
+
+  Future<void> forgetPassword({required String email}) async  {
+    await FirebaseAuth.instance
+        .sendPasswordResetEmail(email: email)
+        .then((value) {
+      Get.snackbar(
+        'Reset Link Sent',
+        'Check your email to reset your password',
+        backgroundColor: Colors.white,
+        colorText: AppColor.kPrimary,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    })
+        .catchError((error) {
+      Get.snackbar(
+        'There is an error',
+        '${error.toString()}',
+        backgroundColor: Colors.white,
+        colorText: AppColor.kPrimary,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    });
   }
 
 

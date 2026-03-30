@@ -4,48 +4,31 @@ import '../../../core/config/app_color.dart';
 import '../../../core/config/app_styles.dart';
 import '../../../core/widget/ components/my_btn.dart';
 import '../../../core/widget/ components/my_txt_field.dart';
+
 import '../../../core/widget/custom_text.dart';
 import '../controller/login_controller.dart';
-import 'forget_password.dart';
-import 'register_view.dart';
 
-
-class LoginView extends StatefulWidget {
-  const LoginView({super.key});
+class ForgetPassword extends StatefulWidget {
+  const ForgetPassword({super.key});
 
   @override
-  State<LoginView> createState() => _LoginViewState();
+  State<ForgetPassword> createState() => _ForgetPasswordState();
 }
 
-class _LoginViewState extends State<LoginView> {
-  final _loginController = Get.find<LoginController>(tag: 'login_controller');
+class _ForgetPasswordState extends State<ForgetPassword> {
+  final _user=Get.find<LoginController>(tag: 'login_controller');
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  void _login() {
-    if (_formKey.currentState!.validate()) {
-      _loginController.login(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+
+
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
-        resizeToAvoidBottomInset: false,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -56,27 +39,37 @@ class _LoginViewState extends State<LoginView> {
                 children: [
                   const SizedBox(height: 60),
 
-                  /// Logo & Title
+                  /// Back Button
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: const Icon(Icons.arrow_back_ios),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// Title Section
                   const Center(
                     child: Column(
                       children: [
                         Icon(
-                          Icons.qr_code_scanner,
+                          Icons.lock_reset,
                           size: 70,
                           color: AppColor.kPrimary,
                         ),
                         SizedBox(height: 16),
                         CustomText(
-                          title: 'Attendance Tracker',
+                          title: 'Forgot Password?',
                           fontSize: AppFontSize.f24,
                           fontWeight: AppFontWeight.bold,
                           txtColor: AppColor.kPrimary,
                         ),
                         SizedBox(height: 8),
                         CustomText(
-                          title: 'Sign in to continue',
+                          title:
+                          'Enter your email and we will send you a reset link',
                           fontSize: AppFontSize.f14,
                           txtColor: Colors.grey,
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -92,8 +85,9 @@ class _LoginViewState extends State<LoginView> {
                     controller: _emailController,
                     prefixIcon: const Icon(Icons.email),
                     validator: (value) {
-                      if (value == null || value.isEmpty)
+                      if (value == null || value.isEmpty) {
                         return 'Email cannot be empty';
+                      }
                       if (!RegExp(
                         r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                       ).hasMatch(value)) {
@@ -103,63 +97,25 @@ class _LoginViewState extends State<LoginView> {
                     },
                   ),
 
-                  const SizedBox(height: 20),
-
-                  /// Password Field
-                  MyTxtField(
-                    title: 'Password',
-                    hintText: 'Enter your password',
-                    controller: _passwordController,
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty)
-                        return 'Password cannot be empty';
-                      if (value.length < 6)
-                        return 'Password must be at least 6 characters';
-                      return null;
-                    },
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        Get.to(()=>const ForgetPassword());
-                      },
-                      child: const CustomText(
-                        title: 'Forgot Password?',
-                        fontSize: AppFontSize.f14,
-                        txtColor: AppColor.kPrimary,
-                        fontWeight: AppFontWeight.w600,
-                      ),
-                    ),
-                  ),
-
                   const SizedBox(height: 30),
 
-                  /// Login Button with Loader
-                  Obx(() {
-                    if (_loginController.loginStatus.value ==
-                        RequestStatus.loading) {
-                      return const Center(child: CircularProgressIndicator(color: AppColor.kPrimary,));
-                    }
-                    return MyBtn(title: 'Login', onPressed: _login);
-                  }),
+                  /// Send Button
+                  MyBtn(
+                    title: 'Send Reset Link',
+                    onPressed: _submit,
+                  ),
 
                   const Spacer(),
 
-                  /// Register Link
+                  /// Back to Login
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have an account? "),
+                      const Text('Remember your password? '),
                       GestureDetector(
-                        onTap: () => Get.off(() => const RegisterView()),
+                        onTap: () => Get.back(),
                         child: const CustomText(
-                          title: 'Register',
+                          title: 'Login',
                           txtColor: AppColor.kPrimary,
                           fontWeight: AppFontWeight.bold,
                         ),
@@ -175,5 +131,13 @@ class _LoginViewState extends State<LoginView> {
         ),
       ),
     );
+  }
+
+  void _submit() async{
+    if (_formKey.currentState!.validate()) {
+      final email = _emailController.text.trim();
+
+      await _user.forgetPassword(email: email);
+    }
   }
 }
